@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="ur" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0f172a">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Mujahid Enamel Wire — Barcode Scanner</title>
+<meta name="application-name" content="Mujahid Scanner">
+<meta name="description" content="Scan and decode Mujahid Enamel Wire 30-digit production barcodes with camera scanning, master data imports, and scan history.">
+<meta property="og:site_name" content="Mujahid Scanner">
+<meta property="og:title" content="Mujahid Scanner — Production Barcode Scanner">
+<meta property="og:description" content="Scan and decode Mujahid Enamel Wire 30-digit production barcodes with camera scanning, master data imports, and scan history.">
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,"Noto Nastaliq Urdu",sans-serif;background:#f1f5f9;color:#0f172a}
+header{background:#0f172a;color:#fff;padding:18px 16px;text-align:center;position:sticky;top:0;z-index:5}
+header h1{font-size:20px;margin:0 0 4px}header p{margin:0;color:#cbd5e1;font-size:12px}
+nav{display:flex;background:#fff;border-bottom:1px solid #e2e8f0;position:sticky;top:77px;z-index:4}
+nav button{flex:1;padding:13px 5px;border:0;background:#fff;font-weight:bold;color:#64748b}
+nav button.active{color:#2563eb;border-bottom:3px solid #2563eb}
+main{max-width:720px;margin:auto;padding:16px}.tab{display:none}.tab.active{display:block}
+.card{background:#fff;border-radius:18px;padding:16px;margin-bottom:14px;box-shadow:0 5px 18px #0f172a10}
+.scanner{background:#020617;border-radius:18px;overflow:hidden;position:relative;min-height:280px}
+video{width:100%;height:320px;object-fit:cover;display:block}
+.scanline{position:absolute;left:10%;right:10%;top:50%;height:2px;background:#22c55e;box-shadow:0 0 12px #22c55e}
+button,.filelabel{border:0;border-radius:11px;padding:12px 15px;font-size:15px;font-weight:bold;cursor:pointer}
+.primary{background:#2563eb;color:white}.secondary{background:#e2e8f0;color:#0f172a}.danger{background:#fee2e2;color:#b91c1c}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}.field{background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:11px}
+.field small{display:block;color:#64748b;font-size:11px;margin-bottom:4px}.field strong{font-size:15px}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+input,select{width:100%;padding:12px;border:1px solid #cbd5e1;border-radius:10px;background:white;font-size:15px}
+h2{font-size:18px;margin:4px 0 14px}h3{font-size:15px;margin:15px 0 8px}
+.notice{padding:12px;border-radius:12px;background:#eff6ff;color:#1d4ed8;font-size:13px;line-height:1.8}
+.error{background:#fef2f2;color:#b91c1c}.success{background:#f0fdf4;color:#15803d}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:9px;border-bottom:1px solid #e2e8f0;text-align:right}
+.filelabel{display:block;background:#0f172a;color:#fff;text-align:center;margin-top:8px}
+textarea{width:100%;min-height:120px;border:1px solid #cbd5e1;border-radius:10px;padding:10px;direction:ltr}
+.badge{display:inline-block;padding:5px 9px;border-radius:20px;background:#dbeafe;color:#1d4ed8;font-size:12px}
+.bigcode{direction:ltr;text-align:center;font-family:monospace;font-size:17px;letter-spacing:1px;word-break:break-all;background:#f8fafc;padding:12px;border-radius:10px}
+@media(max-width:480px){.row{grid-template-columns:1fr}.field strong{font-size:14px}}
+</style>
+</head>
+<body>
+<header><h1>مُجاہد انامیل وائر</h1><p>30 Digit Production Barcode Scanner</p></header>
+<nav>
+<button class="active" onclick="showTab('scan',this)">📷 اسکین</button>
+<button onclick="showTab('admin',this)">⚙️ Admin</button>
+<button onclick="showTab('history',this)">📋 History</button>
+</nav>
+
+<main>
+<div class="notice" id="androidSourceNotice" dir="ltr" style="margin-bottom:14px">Android packaging: <a href="android.html">Download the Android project and APK instructions</a>. A compiled APK is not available yet.</div>
+<section id="scan" class="tab active">
+<div class="card">
+<h2>بارکوڈ اسکین کریں</h2>
+<div class="scanner"><video id="video" playsinline muted></video><div class="scanline"></div></div>
+<div class="actions">
+<button class="primary" id="startBtn">📷 کیمرہ شروع کریں</button>
+<button class="secondary" id="stopBtn">⏹ بند کریں</button>
+</div>
+<div id="scanMsg" class="notice" style="margin-top:10px">کیمرہ شروع کریں اور Data Matrix کو frame کے اندر رکھیں۔</div>
+</div>
+
+<div class="card">
+<h2>Manual Test</h2>
+<input id="manualCode" inputmode="numeric" maxlength="30" placeholder="30 digits barcode یہاں paste کریں">
+<div class="actions"><button class="primary" onclick="decodeManual()">Decode</button></div>
+</div>
+
+<div id="result"></div>
+</section>
+
+<section id="admin" class="tab">
+<div class="card">
+<h2>Admin — Master Data</h2>
+<div class="notice">CSV یا JSON import کریں۔ CSV کی format: <b>code,name</b>۔ مثال: <b>01,Mujahid Enamel Wire</b></div>
+<h3>Products</h3>
+<input type="file" accept=".csv,.txt,.json" onchange="importMaster(event,'products')">
+<h3>Enamel Types</h3>
+<input type="file" accept=".csv,.txt,.json" onchange="importMaster(event,'enamels')">
+<h3>Formulations</h3>
+<input type="file" accept=".csv,.txt,.json" onchange="importMaster(event,'formulations')">
+<h3>Supervisors</h3>
+<input type="file" accept=".csv,.txt,.json" onchange="importMaster(event,'supervisors')">
+<div class="actions">
+<button class="secondary" onclick="exportData()">⬇️ Export Master Data</button>
+<button class="danger" onclick="resetData()">Reset Demo Data</button>
+</div>
+<div id="adminMsg" class="notice" style="margin-top:10px"></div>
+</div>
+<div class="card">
+<h2>موجودہ Master Data</h2>
+<div id="masterTables"></div>
+</div>
+</section>
+
+<section id="history" class="tab">
+<div class="card"><h2>Scan History</h2><div id="historyList"></div>
+<div class="actions"><button class="danger" onclick="clearHistory()">History Clear</button></div></div>
+</section>
+</main>
+
+<script>
+const DEFAULT={
+products:{"01":"Mujahid Enamel Wire","02":"Muslim Enamel Wire","03":"Star Enamel Wire"},
+enamels:{"01":"Polyester","02":"Polyurethane"},
+formulations:{"01":"Class F"},
+supervisors:{"01":"Supervisor 01","02":"Supervisor 02","03":"Supervisor 03"}
+};
+let db=JSON.parse(localStorage.getItem("mujahidMaster")||"null")||structuredClone(DEFAULT);
+let history=JSON.parse(localStorage.getItem("mujahidHistory")||"[]");
+let stream=null, scanning=false, lastCode="", zxingReader=null;
+
+function save(){localStorage.setItem("mujahidMaster",JSON.stringify(db))}
+function showTab(id,btn){document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));document.getElementById(id).classList.add('active');document.querySelectorAll('nav button').forEach(x=>x.classList.remove('active'));btn.classList.add('active');if(id==='admin')renderMaster();if(id==='history')renderHistory()}
+function luhnCheck(code){
+let sum=0,alt=true;
+for(let i=code.length-1;i>=0;i--){let n=+code[i];if(alt){n*=2;if(n>9)n-=9}sum+=n;alt=!alt}
+return sum%10===0;
+}
+function decode(code){
+code=String(code||"").replace(/\s/g,"");
+if(!/^\d{30}$/.test(code)) return {error:"Barcode exactly 30 numeric digits کا ہونا چاہیے۔"};
+if(!luhnCheck(code)) return {error:"Check digit invalid ہے۔ Barcode دوبارہ scan کریں۔"};
+const p={
+productCode:code.slice(0,2),
+swgCode:code.slice(2,5),
+enamelCode:code.slice(5,7),
+formulationCode:code.slice(7,9),
+supervisorCode:code.slice(9,11),
+date:code.slice(11,17),
+net:code.slice(17,22),
+spool:code.slice(22,25),
+sequence:code.slice(25,29),
+check:code.slice(29)
+};
+const y=+p.date.slice(0,2),m=+p.date.slice(2,4),d=+p.date.slice(4,6);
+const fullYear=2000+y;
+const dt=new Date(fullYear,m-1,d);
+if(dt.getFullYear()!==fullYear||dt.getMonth()!==m-1||dt.getDate()!==d)return{error:"Barcode date invalid ہے۔"};
+const netKg=(+p.net/1000).toFixed(3), spoolG=+p.spool;
+return {...p,code,product:db.products[p.productCode]||"Unknown Product ("+p.productCode+")",
+enamel:db.enamels[p.enamelCode]||"Unknown Enamel ("+p.enamelCode+")",
+formulation:db.formulations[p.formulationCode]||"Unknown Formulation ("+p.formulationCode+")",
+supervisor:db.supervisors[p.supervisorCode]||"Unknown Supervisor ("+p.supervisorCode+")",
+swg:(+p.swgCode/10).toString(),dateText:String(d).padStart(2,'0')+"-"+String(m).padStart(2,'0')+"-"+fullYear,
+netKg,spoolG};
+}
+function display(data){
+const box=document.getElementById('result');
+if(data.error){box.innerHTML='<div class="card"><div class="notice error">❌ '+data.error+'</div></div>';return}
+box.innerHTML=`<div class="card">
+<h2>✅ Coil Details</h2>
+<div class="bigcode">${data.code}</div>
+<div class="row" style="margin-top:12px">
+${field("Product",data.product)}${field("SWG",data.swg)}
+${field("Enamel Type",data.enamel)}${field("Formulation",data.formulation)}
+${field("Supervisor",data.supervisor)}${field("Production Date",data.dateText)}
+${field("Net Weight",data.netKg+" kg")}${field("Spool Weight",data.spoolG+" g")}
+${field("Daily Sequence",data.sequence)}${field("Check Digit",data.check)}
+</div>
+<div class="notice" style="margin-top:12px">ℹ️ Gross Weight barcode میں encoded نہیں ہے۔ موجودہ 30-digit format میں Net Weight اور Spool Weight موجود ہیں۔</div>
+</div>`;
+addHistory(data);
+}
+function field(a,b){return `<div class="field"><small>${a}</small><strong>${b}</strong></div>`}
+function decodeManual(){const v=document.getElementById('manualCode').value.trim();const d=decode(v);display(d)}
+function addHistory(d){if(d.error)return;if(history[0]?.code===d.code)return;history.unshift({code:d.code,product:d.product,swg:d.swg,netKg:d.netKg,date:d.dateText,time:new Date().toLocaleString()});history=history.slice(0,100);localStorage.setItem("mujahidHistory",JSON.stringify(history))}
+function renderHistory(){document.getElementById('historyList').innerHTML=history.length?history.map(x=>`<div class="field" style="margin-bottom:8px"><b>${x.product}</b> — SWG ${x.swg} — ${x.netKg} kg<br><small>${x.date} | ${x.time}</small><div class="bigcode" style="margin-top:6px">${x.code}</div></div>`).join(""):'<div class="notice">ابھی کوئی scan نہیں ہوا۔</div>'}
+function clearHistory(){if(confirm("History clear کریں؟")){history=[];localStorage.setItem("mujahidHistory","[]");renderHistory()}}
+function importMaster(e,type){
+const f=e.target.files[0];if(!f)return;
+const r=new FileReader();
+r.onload=()=>{try{
+let txt=r.result.trim(), obj;
+if(f.name.toLowerCase().endsWith(".json"))obj=JSON.parse(txt);
+else{obj={};txt.split(/\r?\n/).forEach((line,i)=>{if(!line.trim())return;let parts=line.split(",");if(i===0&&parts[0].toLowerCase().includes("code"))return;let code=(parts[0]||"").trim(),name=parts.slice(1).join(",").trim();if(code)obj[code]=name})}
+if(!obj||typeof obj!=="object")throw Error();
+db[type]=obj;save();renderMaster();document.getElementById('adminMsg').textContent="Import کامیاب: "+Object.keys(obj).length+" records";
+}catch(err){document.getElementById('adminMsg').textContent="Import failed۔ CSV/JSON format check کریں۔";}}
+r.readAsText(f);
+}
+function renderMaster(){let html="";for(const [type,obj] of Object.entries(db)){html+=`<h3>${type}</h3><table><tr><th>Code</th><th>Name</th></tr>${Object.entries(obj).map(([c,n])=>`<tr><td>${c}</td><td>${n}</td></tr>`).join("")}</table>`}document.getElementById('masterTables').innerHTML=html}
+async function exportData(){
+const data=JSON.stringify(db,null,2);
+if(window.Capacitor?.isNativePlatform()){
+try{const response=await window.Capacitor.Plugins.MasterExport.save({data});if(!response.cancelled)document.getElementById('adminMsg').textContent="Master data exported."}
+catch(error){document.getElementById('adminMsg').textContent="Export failed: "+error.message}
+return;
+}
+const a=document.createElement("a");const url=URL.createObjectURL(new Blob([data],{type:"application/json"}));a.href=url;a.download="mujahid-master-data.json";a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)
+}
+function resetData(){if(confirm("Demo master data restore کریں؟")){db=structuredClone(DEFAULT);save();renderMaster()}}
+
+/* ---------- Camera ---------- */
+function setMsg(html,isError){const m=document.getElementById('scanMsg');m.className="notice"+(isError?" error":"");m.innerHTML=html}
+
+function stopCamera(){
+scanning=false;
+if(zxingReader){try{zxingReader.reset()}catch(e){}zxingReader=null}
+if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}
+const v=document.getElementById('video');v.srcObject=null;
+}
+
+function onRawCode(raw){
+if(raw===lastCode)return false;
+lastCode=raw;
+const d=decode(raw);
+display(d);
+document.getElementById('manualCode').value=raw;
+return !d.error;
+}
+
+function cameraError(e){
+const name=(e&&e.name)||"";
+if(name==="NotAllowedError"||name==="SecurityError"){
+if(window.Capacitor?.isNativePlatform()){
+setMsg("❌ Camera permission denied. Open Android Settings → Apps → Mujahid Scanner → Permissions → Camera and allow access, then try again.",true);return;
+}
+setMsg("❌ کیمرے کی اجازت نہیں ملی۔<br>Chrome کی ایڈریس بار میں تالے/سیٹنگ کے نشان پر دبائیں، Camera کو <b>Allow</b> کریں، پھر صفحہ ری فریش کریں۔<br>اگر پھر بھی نہ چلے تو فون Settings → Apps → Chrome → Permissions → Camera میں <b>Allow</b> کریں۔",true);
+}else if(name==="NotFoundError"||name==="OverconstrainedError"){
+setMsg("❌ اس ڈیوائس پر کیمرہ نہیں ملا۔",true);
+}else if(name==="NotReadableError"||name==="AbortError"){
+setMsg("❌ کیمرہ کسی اور ایپ میں استعمال ہو رہا ہے۔ باقی ایپس بند کر کے دوبارہ کوشش کریں۔",true);
+}else{
+setMsg("❌ کیمرہ شروع نہیں ہو سکا۔ ("+(name||"unknown")+")",true);
+}
+}
+
+function loadZXing(){
+return new Promise((resolve,reject)=>{
+if(window.ZXing)return resolve();
+const s=document.createElement('script');
+s.src="vendor/zxing.min.js";
+s.onload=()=>window.ZXing?resolve():reject(new Error("zxing"));
+s.onerror=()=>reject(new Error("zxing-load"));
+document.head.appendChild(s);
+});
+}
+
+async function nativeSupportsDataMatrix(){
+if(!("BarcodeDetector" in window))return false;
+try{const f=await BarcodeDetector.getSupportedFormats();return f.includes("data_matrix")}catch(e){return false}
+}
+
+async function startNative(){
+const detector=new BarcodeDetector({formats:["data_matrix","qr_code"]});
+stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"}},audio:false});
+const v=document.getElementById('video');v.srcObject=stream;await v.play();scanning=true;
+setMsg("Scanner چل رہا ہے — Data Matrix camera کے سامنے رکھیں۔");
+async function loop(){
+if(!scanning)return;
+try{const codes=await detector.detect(v);if(codes.length){if(onRawCode(codes[0].rawValue)){stopCamera();return}}}catch(e){}
+requestAnimationFrame(loop);
+}
+loop();
+}
+
+async function startZXing(){
+setMsg("اسکینر لائبریری لوڈ ہو رہی ہے…");
+try{await loadZXing()}catch(e){
+setMsg("❌ اسکینر لائبریری لوڈ نہیں ہو سکی۔ ایپ دوبارہ کھولیں، یا Manual Test استعمال کریں۔",true);return;
+}
+const hints=new Map();
+hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS,[ZXing.BarcodeFormat.DATA_MATRIX,ZXing.BarcodeFormat.QR_CODE]);
+hints.set(ZXing.DecodeHintType.TRY_HARDER,true);
+zxingReader=new ZXing.BrowserMultiFormatReader(hints);
+scanning=true;
+const v=document.getElementById('video');
+await zxingReader.decodeFromConstraints({video:{facingMode:{ideal:"environment"}},audio:false},v,(result,err)=>{
+if(result&&scanning){if(onRawCode(result.getText())){stopCamera()}}
+});
+setMsg("Scanner چل رہا ہے (ZXing) — Data Matrix camera کے سامنے رکھیں۔");
+}
+
+async function startCamera(){
+stopCamera();lastCode="";
+if(!window.isSecureContext){
+setMsg("❌ یہ صفحہ محفوظ (HTTPS) طریقے سے نہیں کھلا، اس لیے Chrome کیمرہ بلاک کر رہا ہے۔<br>فائل کو سیدھا فون کی میموری سے کھولنے پر ایسا ہوتا ہے۔ اسے HTTPS ویب لنک (مثلاً Netlify) سے کھولیں۔",true);
+return;
+}
+if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
+setMsg("❌ اس browser میں کیمرہ API موجود نہیں۔ Chrome کا updated version استعمال کریں۔",true);
+return;
+}
+try{
+if(await nativeSupportsDataMatrix()){await startNative()}
+else{await startZXing()}
+}catch(e){stopCamera();cameraError(e)}
+}
+document.getElementById('startBtn').onclick=startCamera;document.getElementById('stopBtn').onclick=stopCamera;
+renderMaster();renderHistory();
+if(window.Capacitor?.isNativePlatform()){
+document.getElementById('androidSourceNotice').hidden=true;
+document.addEventListener('visibilitychange',()=>{if(document.hidden)stopCamera()});
+}
+
+if(!window.Capacitor?.isNativePlatform()&&"serviceWorker" in navigator&&location.protocol.startsWith("http")){
+navigator.serviceWorker.register("sw.js").catch(()=>{});
+}
+</script>
+</body></html>

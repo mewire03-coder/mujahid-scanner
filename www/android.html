@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Mujahid Scanner — Android Package</title>
+  <meta name="application-name" content="Mujahid Scanner">
+  <meta name="description" content="Download the Mujahid Scanner Android source project and follow the instructions to generate an installable APK.">
+  <meta property="og:site_name" content="Mujahid Scanner">
+  <meta property="og:title" content="Mujahid Scanner — Android Package">
+  <meta property="og:description" content="Android source and packaging instructions for the Mujahid Enamel Wire production barcode scanner.">
+  <meta name="theme-color" content="#172624">
+  <link rel="icon" href="icon-192.png">
+  <style>
+    :root{color-scheme:light;font-family:Georgia,serif;color:#172624;background:#f4f3ec}
+    *{box-sizing:border-box}body{margin:0}main{max-width:860px;margin:auto;padding:48px 24px 72px}
+    .brand{font:600 12px/1.5 'Trebuchet MS',sans-serif;letter-spacing:.16em;text-transform:uppercase;border-bottom:1px solid #c5cec7;padding-bottom:20px}
+    .eyebrow{font:600 12px/1.5 'Trebuchet MS',sans-serif;text-transform:uppercase;letter-spacing:.13em;color:#566b61;margin-top:56px}
+    h1{font-weight:400;font-size:clamp(36px,7vw,62px);line-height:1.07;max-width:620px;margin:18px 0 24px}
+    p,li{font:16px/1.8 'Trebuchet MS',sans-serif}p{max-width:680px}h2{font-weight:400;font-size:28px;margin-top:42px}
+    .status{border-left:3px solid #ae7d35;padding:14px 20px;background:#ece8db;margin:30px 0}
+    .download{display:inline-block;background:#234c3e;color:#fff;padding:15px 22px;text-decoration:none;font:600 15px/1.5 'Trebuchet MS',sans-serif}
+    a{color:#234c3e;text-underline-offset:4px}a:hover{opacity:.8}a:focus-visible{outline:3px solid #ae7d35;outline-offset:5px}
+    .note{color:#5a665e;font-size:13px}ol{padding-left:24px}li{padding:7px 0}code{font:13px/1.7 monospace;background:#e4e9e1;padding:3px 5px;overflow-wrap:anywhere}
+    footer{margin-top:48px;border-top:1px solid #c5cec7;padding-top:20px}
+    @media(max-width:480px){main{padding:28px 20px 48px}.eyebrow{margin-top:36px}}
+  </style>
+</head>
+<body>
+  <main>
+    <div class="brand">Mujahid Enamel Wire / Production Tools</div>
+    <p class="eyebrow">Android packaging</p>
+    <h1>Your scanner.<br>An Android project.</h1>
+    <p>The uploaded scanner has been wrapped in an Android application project, retaining its Urdu interface and production barcode decoding. Download the source below to generate an installable APK.</p>
+    <div class="status" role="note"><p><strong>No compiled APK is available yet.</strong> This download is source code, not an installable app. Android compilation was not authorized in this session, and device testing remains outstanding.</p></div>
+    <a class="download" href="downloads/mujahid-scanner-android-source.zip" download>Download Android source ZIP</a>
+    <p class="note">Includes the scanner, Android project, bundled decoder, and packaging instructions. Do not rename this ZIP to .apk.</p>
+    <h2>Generate the APK</h2>
+    <ol>
+      <li>Extract the ZIP. Install Android Studio, Node.js 22+, Java 21, Android SDK 36, and build tools 36.0.0.</li>
+      <li>In the extracted project folder, run <code>npm ci</code>, then <code>npm run android:sync</code>.</li>
+      <li>Run <code>npm run android:open</code>. In Android Studio, choose <strong>Build → Generate App Bundles or APKs → Generate APKs</strong> (or <strong>Build APK(s)</strong>).</li>
+      <li>The output is <code>android/app/build/outputs/apk/debug/app-debug.apk</code>. Transfer it to your phone, allow installation from that trusted source, and grant camera access.</li>
+    </ol>
+    <h2>Without a local Android setup</h2>
+    <p>Upload the extracted project to a GitHub repository, including its <code>.github</code> folder. Under <strong>Actions</strong>, manually run <strong>Package Android APK</strong>. After it succeeds, download the <code>mujahid-scanner-apk</code> artifact and extract the APK.</p>
+    <p class="note">Debug APKs are for testing and sideloading. Public distribution requires release signing. Test camera scanning, imports, exports, offline startup, and history on an Android device before use. Web and Android data do not sync.</p>
+    <footer><a href="index.html">Open the web scanner</a></footer>
+  </main>
+</body>
+</html>

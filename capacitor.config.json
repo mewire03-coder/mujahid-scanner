@@ -1,0 +1,8 @@
+{
+  "appId": "com.mujahidenamel.scanner",
+  "appName": "Mujahid Scanner",
+  "webDir": "www",
+  "android": {
+    "allowMixedContent": false
+  }
+}
